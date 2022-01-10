@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.edu.dao.SelectCourseMapper">
+
+    <!--按学号查询选课信息-->
+    <select id="selectSelectCourseBySNo" parameterType="int" resultType="course">
+    select * from course
+    where Cno in(select Cno from selectcourse where Sno = #{sNo})
+    </select>
+
+    <!--按学号查询未选课信息-->
+    <select id="selectNotSelectCourseBySNo" parameterType="int" resultType="course">
+    select * from course
+    where Cno not in(select Cno from selectcourse where Sno = #{sNo})
+    </select>
+
+    <!--按课程号查询选课信息-->
+    <select id="selectSelectCourseByCNo" parameterType="int" resultType="student">
+    select * from student
+    where Sno in(select Sno from selectcourse where Cno = #{cNo})
+    </select>
+
+    <!--添加选课信息(使用存储过程顺便插入成绩表，成绩为暂为-1)-->
+    <insert id="addSelectCourse" statementType="CALLABLE">
+        call addSelectCourseWithSC(#{sNo,jdbcType=INTEGER,mode=IN},#{cNo,jdbcType=INTEGER,mode=IN})
+    </insert>
+
+    <!--根据学号和课程号删除选课信息-->
+    <delete id="deleteSelectCourseBySnoAndCno">
+        delete from selectcourse where Sno = #{sNo} and Cno = #{cNo}
+    </delete>
+
+</mapper>

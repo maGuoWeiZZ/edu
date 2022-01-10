@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans
+        xmlns="http://www.springframework.org/schema/beans"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:context="http://www.springframework.org/schema/context"
+        xmlns:aop="http://www.springframework.org/schema/aop"
+        xmlns:tx="http://www.springframework.org/schema/tx"
+        xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx-4.3.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context-4.3.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache.xsd">
+
+    <!--配置扫描组件-->
+    <context:component-scan base-package="com.edu"/>
+    <!-- 扫描切面的注解 -->
+    <aop:aspectj-autoproxy/>
+    <!--引入外部文件-->
+    <context:property-placeholder location="classpath:db.properties"/>
+    <!--数据源对象-->
+    <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource">
+        <property name="driverClassName" value="${jdbc.driver}"/>
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+        <property name="maxActive" value="${jdbc.maxActive}"/>
+        <property name="maxIdle" value="${jdbc.maxIdle}"/>
+        <property name="initialSize" value="${jdbc.initialSize}"/>
+    </bean>
+    <!--事务管理器对象,依赖数据源创建 ,切面 -->
+    <bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+    <!--&lt;!&ndash;开启事务注解&ndash;&gt;-->
+    <!--<tx:annotation-driven transaction-manager="txManager"/>-->
+    <!--  通知对象的创建，基于切面-->
+    <tx:advice id="txAdvice" transaction-manager="txManager">
+        <tx:attributes>
+            <tx:method name="*" propagation="REQUIRED" isolation="DEFAULT" read-only="false"/>
+        </tx:attributes>
+    </tx:advice>
+    <!--aop-->
+    <aop:config>
+        <aop:pointcut id="pointCut1" expression="execution(public * com.edu.service..*.*(..))"/>
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="pointCut1"/>
+    </aop:config>
+    <!-- 创建sqlSessionFactory对象 -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="configLocation" value="classpath:config.xml"/>
+    </bean>
+
+    <!--扫描mapper接口-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.edu.dao"/>
+    </bean>
+
+</beans>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.edu.dao.CourseMapper">
+
+    <!--嵌套查询 包含成绩-->
+    <resultMap id="courseWithScore" type="course">
+        <id property="cNo" column="Cno"/>
+        <result property="cName" column="Cname"/>
+        <result property="credit" column="credit"/>
+        <result property="remarks" column="remarks"/>
+        <!--<collection property="scList" column="Cno" ofType="sc" select="com.edu.dao.SCMapper.selectSCByCno"/>-->
+    </resultMap>
+
+    <!--查询所有课程信息-->
+    <select id="selectAllCourse" resultMap="courseWithScore">
+        select * from course
+    </select>
+
+    <!--通过课程编号精确查询课程信息-->
+    <select id="selectCourseById" parameterType="int" resultMap="courseWithScore">
+        select * from course where Cno = #{cNo}
+    </select>
+    <!--通过课程名称模糊查询课程信息-->
+    <select id="selectCourseByName" parameterType="String" resultMap="courseWithScore">
+        select * from course where Cname like concat('%',#{cName},'%')
+    </select>
+
+    <!--添加课程信息-->
+    <insert id="addCourse" parameterType="course" useGeneratedKeys="true">
+        <selectKey keyProperty="cNo" order="BEFORE" keyColumn="Cno" resultType="Integer">
+            select if(max(Cno) is null,1,max(Cno)+1) from course
+        </selectKey>
+        insert into course values(#{cNo},#{cName},#{credit},#{remarks})
+    </insert>
+
+    <!--删除课程信息-->
+    <delete id="deleteCourseById" parameterType="int">
+        delete from course where Cno = #{cNo}
+    </delete>
+    <!--修改课程信息-->
+    <update id="updateCourse" parameterType="course">
+        update course
+        <set>
+            <if test="cName != null and cName != ''">
+                Cname = #{cName},
+            </if>
+            <if test="credit != null and credit != ''">
+                credit = #{credit},
+            </if>
+            <if test="remarks != null and remarks != ''">
+                remarks = #{remarks},
+            </if>
+        </set>
+        where Cno = #{cNo}
+    </update>
+</mapper>

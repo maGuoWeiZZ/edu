@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.edu.dao.TeacherMapper">
+    <!--Teacher-->
+    <!--查询所有教师信息-->
+    <select id="selectAllTeachers" resultType="teacher">
+        select * from teacher
+    </select>
+    <!--通过姓名模糊查询教师信息-->
+    <select id="selectTeacherByName" parameterType="String" resultType="teacher">
+        select * from teacher where Tname like concat('%',#{tName},'%')
+    </select>
+    <!--通过教师编号精确查询教师信息-->
+    <select id="selectTeacherById" parameterType="int" resultType="teacher">
+        select * from teacher where Tno = #{tNo}
+    </select>
+    <!--添加教师信息-->
+    <insert id="addTeacher" parameterType="teacher">
+        <selectKey resultType="Integer" keyColumn="Tno" order="BEFORE" keyProperty="tNo">
+            select if(max(Tno) is null,1,max(Tno) + 1) from teacher
+        </selectKey>
+        insert into teacher values(#{tNo},#{tName},#{tSex},#{tAge},#{tDept},#{tSalary},#{tPassword})
+    </insert>
+    <!--删除教师信息-->
+    <delete id="deleteTeacherById" parameterType="int">
+        delete from teacher where Tno = #{tNo}
+    </delete>
+    <!--修改教师信息-->
+    <update id="updateTeacher" parameterType="teacher">
+        update teacher
+        <set>
+            <if test="tName!=null and tName!=''">
+                Tname = #{tName},
+            </if>
+            <if test="tSex!=null and tSex!=''">
+                Tsex = #{tSex},
+            </if>
+            <if test="tAge!=null and tAge!=''">
+                Tage = #{tAge},
+            </if>
+            <if test="tDept!=null and tDept!=''">
+                Tdept = #{tDept},
+            </if>
+            <if test="tSalary!=null and tSalary!=''">
+                Tsalary = #{tSalary},
+            </if>
+            <if test="tPassword!=null and tPassword!=''">
+                Tpassword = #{tPassword}
+            </if>
+        </set>
+        where Tno = #{tNo}
+    </update>
+
+</mapper>

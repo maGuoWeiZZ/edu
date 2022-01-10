@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.edu.dao.SCMapper">
+    <!--查询所有成绩信息-->
+    <select id="selectAllSC" resultMap="scMap">
+        select * from sc
+    </select>
+
+    <!--嵌套查询-->
+    <resultMap id="scMap" type="sc">
+        <id property="scId" column="SCid"></id>
+        <result property="score" column="Score"></result>
+        <!--一的一方-->
+        <association property="student" javaType="student" column="Sno"
+                     select="com.edu.dao.StudentMapper.selectStudentById" fetchType="eager"></association>
+        <!--一的一方-->
+        <association property="course" javaType="course" column="Cno"
+                     select="com.edu.dao.CourseMapper.selectCourseById" fetchType="eager"></association>
+    </resultMap>
+
+    <!--通过学号sNo查询成绩（成绩单）-->
+    <select id="selectSCBySno" parameterType="int" resultMap="scMap">
+        select * from sc where Sno = #{sNo}
+    </select>
+    <!--通过课程号cNo查询成绩-->
+    <select id="selectSCByCno" parameterType="int" resultMap="scMap">
+        select * from sc where Cno = #{cNo}
+    </select>
+    <!--通过课程号cNo查询成绩排序-->
+    <select id="selectSCByCnoOrderByScore" parameterType="int" resultMap="scMap">
+        select * from sc where Cno = #{cNo} order by score desc
+    </select>
+    <!--通过学号和课程号查询成绩-->
+    <select id="selectSCBySnoAndCno" parameterType="int" resultMap="scMap">
+        select * from sc where Sno = #{sNo} and Cno = #{cNo}
+    </select>
+    <!--添加成绩信息-->
+    <insert id="addSC" parameterType="sc" useGeneratedKeys="true">
+    <selectKey resultType="int" keyColumn="SCid" keyProperty="scId" order="BEFORE">
+        select if(max(SCid) is null,1,max(SCid) + 1) from sc
+    </selectKey>
+        insert into sc values(#{scId},#{student.sNo},#{course.cNo},#{score})
+    </insert>
+    <!--通过成绩编号删除成绩-->
+    <delete id="deleteSCBySCId" parameterType="int">
+        delete from sc where SCid = #{scId}
+    </delete>
+    <!--通过学号和课程号删除成绩-->
+    <delete id="deleteSCBySnoAndCno">
+        delete from sc where Sno = #{sNo} and Cno = #{cNo}
+    </delete>
+    <!--修改成绩-->
+    <update id="modifyScore" parameterType="sc">
+        update sc set score = #{score}  where Sno = #{student.sNo} and Cno = #{course.cNo}
+    </update>
+</mapper>

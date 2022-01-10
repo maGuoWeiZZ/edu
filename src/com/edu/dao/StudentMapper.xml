@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.edu.dao.StudentMapper">
+    <!--Student-->
+    <!--嵌套查询 包含成绩-->
+    <resultMap id="studentWithScore" type="student">
+        <id property="sNo" column="Sno"/>
+        <result property="sName" column="Sname"/>
+        <result property="sSex" column="Ssex"/>
+        <result property="sAge" column="Sage"/>
+        <result property="sDept" column="Sdept"/>
+        <result property="sPassword" column="Spassword"/>
+        <!--多的一方-->
+        <!--<collection property="scList" column="Sno" ofType="sc" select="com.edu.dao.SCMapper.selectSCBySno" fetchType="eager"/>-->
+    </resultMap>
+
+    <!--查询所有学生信息-->
+    <select id="selectAllStudents" resultMap="studentWithScore">
+        select * from student
+    </select>
+
+    <!--通过姓名模糊查询学生信息-->
+    <select id="selectStudentByName" parameterType="String" resultMap="studentWithScore">
+        select * from student where Sname like concat('%',#{sName},'%')
+    </select>
+
+    <!--通过学号精确查询学生信息-->
+    <select id="selectStudentById" parameterType="int" resultMap="studentWithScore">
+        select * from student where Sno = #{sNo}
+    </select>
+
+    <!--通过学号和密码查询学生信息-->
+    <select id="selectStudentByIdAndPassword" resultMap="studentWithScore">
+        select * from student where Sno = #{sNo} and Spassword = #{sPassword}
+    </select>
+
+    <!--通过学号集合批量查询学生信息-->
+    <select id="selectStudentByIds" parameterType="List" resultMap="studentWithScore">
+        select * from student
+        <where>
+            <foreach collection="list" item="sNo" open="sNo in (" close=")" separator=",">
+                #{sNo}
+            </foreach>
+        </where>
+    </select>
+
+    <!--添加学生信息-->
+    <insert id="addStudent" parameterType="student" useGeneratedKeys="true">
+        <selectKey resultType="Integer" keyProperty="sNo" keyColumn="Sno" order="BEFORE">
+            select if(max(Sno) is null,1,max(Sno) + 1) from student
+        </selectKey>
+        insert into student values(#{sNo},#{sName},#{sSex},#{sAge},#{sDept},#{sClass},#{sPassword})
+    </insert>
+
+    <!--批量添加学生信息-->
+    <insert id="addStudents" parameterType="List" useGeneratedKeys="true">
+        insert into student values
+        <foreach collection="list" item="student" separator=",">
+            (null,#{student.sName},#{student.sSex},#{student.sAge},#{student.sDept},#{student.sClass},#{student.sPassword})
+        </foreach>
+    </insert>
+
+    <update id="updateStudent" parameterType="student">
+        update student
+        <set>
+            <if test="sName!=null and sName!=''">
+                Sname = #{sName},
+            </if>
+            <if test="sSex!=null and sSex!=''">
+                Ssex = #{sSex},
+            </if>
+            <if test="sAge!=null and sAge!=''">
+                Sage = #{sAge},
+            </if>
+            <if test="sDept!=null and sDept!=''">
+                Sdept = #{sDept},
+            </if>
+            <if test="sClass!=null and sClass!=''">
+                Sclass = #{sClass},
+            </if>
+            <if test="sPassword!=null and sPassword!=''">
+                Spassword = #{sPassword},
+            </if>
+        </set>
+        <where>
+            Sno = #{sNo}
+        </where>
+    </update>
+
+    <delete id="deleteStudentById" parameterType="int">
+        delete from student where Sno = #{sNo}
+    </delete>
+
+</mapper>

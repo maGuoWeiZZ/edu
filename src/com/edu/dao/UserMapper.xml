@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.edu.dao.UserMapper">
+
+    <!--查询所有用户信息-->
+    <select id="selectAllUsers" resultMap="userWithDetail2">
+        select * from suser
+    </select>
+
+    <!--嵌套结果-->
+    <select id="selectUserWithDetailByIdResult" parameterType="int" resultMap="userWithDetail">
+        select * from suser u inner join suserdetail d on u.did = d.did where uid = #{uid}
+    </select>
+
+    <!--嵌套查询-->
+    <select id="selectUserWithDetailByIdQuery" parameterType="int" resultMap="userWithDetail2">
+        select * from suser  where uid = #{uid}
+    </select>
+
+    <!--嵌套结果-->
+    <resultMap id="userWithDetail" type="user">
+        <id property="uid" column="uid"></id>
+        <result property="username" column="username"></result>
+        <result property="password" column="password"></result>
+        <!--一对一-->
+        <association property="detail" javaType="userDetail">
+            <id property="did" column="did"></id>
+            <result property="realName" column="realname"></result>
+            <result property="email" column="email"></result>
+            <result property="phone" column="phone"></result>
+        </association>
+    </resultMap>
+
+    <!--嵌套查询-->
+    <resultMap id="userWithDetail2" type="user">
+        <id property="uid" column="uid"></id>
+        <result property="username" column="username"></result>
+        <result property="password" column="password"></result>
+        <!--一对一-->
+        <!--column传递参数  select查询路径  fetchType延迟加载-->
+        <association property="detail" javaType="userDetail" column="did"
+                     select="com.edu.dao.UserDetailMapper.selectDetailById" fetchType="eager">
+        </association>
+    </resultMap>
+
+    <!--用户名模糊查询-->
+    <select id="selectUserByUsername" parameterType="String" resultMap="userWithDetail2">
+        select * from suser where username like concat('%',#{username},'%')
+    </select>
+
+    <!--用户名精确查询-->
+    <select id="selectUserByUsernameLogin" parameterType="String" resultMap="userWithDetail2">
+        select * from suser where username = #{username}
+    </select>
+
+    <!--uid精确查询-->
+    <select id="selectUserByUid" parameterType="int" resultMap="userWithDetail2">
+        select * from suser where uid = #{uid}
+    </select>
+
+
+    <!--插入用户，调用存储过程-->
+    <insert id="addUserWithDetail" parameterType="user" statementType="CALLABLE" useGeneratedKeys="true">
+        call insertUserWithDetail(#{uid,jdbcType=INTEGER,mode=OUT},#{username,jdbcType=VARCHAR,mode=IN},#{password,jdbcType=VARCHAR,mode=IN}
+                                    ,#{detail.did,jdbcType=INTEGER,mode=OUT},#{detail.realName,jdbcType=VARCHAR,mode=IN},#{detail.email,jdbcType=VARCHAR,mode=IN}
+                                    ,#{detail.phone,jdbcType=VARCHAR,mode=IN})
+    </insert>
+
+    <!--级联删除-->
+    <delete id="deleteUSerById" parameterType="int">
+        delete u,d from suser u inner join suserdetail d on u.did = d.did where u.uid = #{uid}
+    </delete>
+
+    <!--级联更新-->
+    <update id="updateUserWithDetail" parameterType="user">
+        update suser u inner join suserdetail d on u.did = d.did
+        <set>
+            <if test="username != null and username != ''">
+                u.username = #{username},
+            </if>
+            <if test="password != null and password != ''">
+                u.password = #{password},
+            </if>
+            <if test="detail != null and detail != ''">
+                <if test="detail.realName != null and detail.realName != ''">
+                    d.realname = #{detail.realName},
+                </if>
+                <if test="detail.email != null and detail.email != ''">
+                    d.email = #{detail.email},
+                </if>
+                <if test="detail.email != null and detail.email != ''">
+                    d.email = #{detail.email},
+                </if>
+                <if test="detail.phone != null and detail.phone != ''">
+                    d.phone = #{detail.phone},
+                </if>
+            </if>
+        </set>
+        where u.uid = #{uid}
+    </update>
+
+</mapper>
